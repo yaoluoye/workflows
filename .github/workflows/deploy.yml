@@ -52,9 +52,10 @@ jobs:
         with:
           repository: ${{ inputs.cicd_repo }}
           token: ${{ secrets.cicd_repo_read_token }}
+          path: cicd
 
       - name: Deploy
-        uses: ./.github/actions/eks-action
+        uses: ./cicd/actions/eks-action
         env:
           aws_access_key_id: ${{ secrets.aws_access_key_id }}
           aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
@@ -64,4 +65,4 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
           PROJECT: ${{ inputs.project }}
         with:
-          args: bash cicd/deploy.sh  ${{ inputs.environment }}
+          args: bash cicd/charts/deploy-$PROJECT.sh  ${{ inputs.environment }}
