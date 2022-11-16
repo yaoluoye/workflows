@@ -73,9 +73,6 @@ jobs:
         run: |
           echo "image=${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.image_tag }}" >> $GITHUB_OUTPUT
 
-      - name: Show variables
-        run: echo ${{ github.ref }} ${{ steps.login-ecr.outputs.registry }} ${{ steps.tag.outputs.image_tag }}
-
       - name: Checkout
         uses: actions/checkout@v3
 
