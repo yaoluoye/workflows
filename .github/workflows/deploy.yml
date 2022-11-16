@@ -1,0 +1,67 @@
+on:
+  workflow_call:
+    inputs:
+      image_repo:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      project:
+        required: true
+        type: string
+      cicd_repo:
+        required: true
+        type: string
+      eks_cluster_name:
+        required: true
+        type: string
+      aws_region:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      cicd_repo_read_token:
+        required: true
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        id: aws_credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ inputs.aws_region }}
+          mask-aws-account-id: 'no'
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.cicd_repo }}
+          token: ${{ secrets.cicd_repo_read_token }}
+
+      - name: Deploy
+        uses: ./.github/actions/eks-action
+        env:
+          aws_access_key_id: ${{ secrets.aws_access_key_id }}
+          aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+          aws_region: ${{ inputs.aws_region }}
+          cluster_name: ${{ inputs.eks_cluster_name }}
+          IMAGE_REPO: ${{ inputs.image_repo }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          PROJECT: ${{ inputs.project }}
+        with:
+          args: bash cicd/deploy.sh  ${{ inputs.environment }}
