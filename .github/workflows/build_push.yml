@@ -26,25 +26,19 @@ on:
       image_tag:
         description: "The image tag"
         value: ${{ jobs.build_and_push.outputs.image_tag }}
+      image:
+        description: "The image full path"
+        value: ${{ jobs.build_and_push.outputs.image }}
 
 jobs:
   build_and_push:
     name: Build_and_Push
     runs-on: ubuntu-latest
     outputs:
-      image_repo: ${{ steps.login-ecr.outputs.registry }}
+      image_repo: ${{ steps.repo.outputs.repo }}
       image_tag: ${{ steps.tag.outputs.image_tag }}
+      image: ${{ steps.image.outputs.image }}
     steps:
-      - name: Set image tag
-        id: tag
-        shell: bash
-        run: |
-          if [[ ${{ inputs.environment }} == "dev" ]];then
-          echo "image_tag=$(date +'%y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-          else
-          echo "image_tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
-          fi
-
       - name: Configure AWS credentials
         id: aws_credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
@@ -58,10 +52,26 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Set image tag
+        id: tag
+        shell: bash
+        run: |
+          if [[ ${{ inputs.environment }} == "dev" ]];then
+          echo "image_tag=$(date +'%y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          else
+          echo "image_tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set image repo
+        id: repo
+        shell: bash
+        run: |
+          echo "repo=${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_repo_project }}" >> $GITHUB_OUTPUT
+
       - name: Set image
         id: image
         run: |
-          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ inputs.image_repo_project }}:${{ steps.tag.outputs.image_tag }}" >> $GITHUB_ENV
+          echo "image=${{ steps.repo.outputs.repo }}:${{ steps.tag.outputs.image_tag }}" >> $GITHUB_OUTPUT
 
       - name: Show variables
         run: echo ${{ github.ref }} ${{ steps.login-ecr.outputs.registry }} ${{ steps.tag.outputs.image_tag }}
@@ -81,7 +91,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.image }}
+          tags: ${{ steps.image.outputs.image }}
 
       - name: Build with args and push
         if: ${{ inputs.build_args != 'None' }}
@@ -91,4 +101,4 @@ jobs:
           build-args: |
             ${{ inputs.build_args }}
           push: true
-          tags: ${{ env.image }}
+          tags: ${{ steps.image.outputs.image }}
