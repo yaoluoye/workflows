@@ -12,7 +12,7 @@ on:
         type: string
       build_args:
         required: false
-        default: None
+        default: "None"
         type: string
     secrets:
       aws_access_key_id:
@@ -76,7 +76,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build and push
-        if: inputs.build_args == None
+        if: inputs.build_args == "None"
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -84,7 +84,7 @@ jobs:
           tags: ${{ env.image }}
 
       - name: Build with args and push
-        if: inputs.build_args != None
+        if: inputs.build_args != "None"
         uses: docker/build-push-action@v3
         with:
           context: .
