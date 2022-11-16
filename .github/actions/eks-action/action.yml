@@ -1,8 +1,0 @@
-name: "EKS Actions"
-description: "Interacts with EKS clusters on eks."
-branding:
-  icon: 'box'
-  color: 'gray-dark'
-runs:
-  using: "docker"
-  image: "Dockerfile"
