@@ -65,4 +65,4 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
           PROJECT: ${{ inputs.project }}
         with:
-          args: bash cicd/charts/deploy-$PROJECT.sh  ${{ inputs.environment }}
+          args: bash cicd/charts/deploy-$PROJECT.sh
